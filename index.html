@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vision Board Creator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Sarabun', Arial, sans-serif;
+        }
+
+        body {
+            background: #f0f0f0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        #questionForm {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .question {
+            margin-bottom: 25px;
+        }
+
+        .question label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .question .hint {
+            display: block;
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            font-style: italic;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .button-group button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: white;
+            font-weight: bold;
+            transition: opacity 0.2s;
+        }
+
+        .button-group button:hover {
+            opacity: 0.9;
+        }
+
+        button[type="submit"] {
+            background: #2c3e50;
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+        }
+
+        .btn-print {
+            background: #27ae60;
+        }
+
+        #visionBoard {
+            display: none;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            min-height: 600px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .board-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            padding: 20px;
+            min-height: 200px;
+        }
+
+        .vision-item {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: left;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .vision-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .vision-item h3 {
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.2em;
+        }
+
+        .vision-item p {
+            line-height: 1.8;
+            font-size: 1em;
+            color: #333;
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #e74c3c;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 12px;
+            border: none;
+            z-index: 1;
+        }
+
+        .vision-item:hover .delete-btn {
+            display: flex;
+        }
+
+        #noGoalsMessage {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+            display: none;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .board-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+
+            .container {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Create Your Vision Board</h1>
+        
+        <form id="questionForm">
+            <div class="question">
+                <label for="goalType">เลือกประเภทเป้าหมายของคุณ</label>
+                <select id="goalType" required>
+                    <option value="">กรุณาเลือกประเภทเป้าหมาย</option>
+                    <option value="financial">เป้าหมายด้านการเงิน</option>
+                    <option value="career">เป้าหมายด้านการงาน/ธุรกิจ</option>
+                    <option value="relationship">เป้าหมายด้านความรัก/ความสัมพันธ์</option>
+                    <option value="health">เป้าหมายด้านสุขภาพ</option>
+                    <option value="personal">เป้าหมายด้านการพัฒนาตัวเอง</option>
+                    <option value="giving">เป้าหมายด้านการให้และแบ่งปัน</option>
+                </select>
+            </div>
+
+            <div class="question">
+                <label for="whatIsYourGoal">What is Your Goal - เป้าหมายของคุณคืออะไร</label>
+                <textarea id="whatIsYourGoal" required></textarea>
+            </div>
+
+            <div class="question">
+                <label for="strongWhy">Strong Why - เป้าหมายนี้สำคัญกับเรายังไง</label>
+                <span class="hint">เช่น ถ้าไม่ได้เป้าหมายนี้ จะเกิดอะไรขึ้นบ้าง และถ้าได้ จะส่งผลดีต่อใครบ้าง</span>
+                <textarea id="strongWhy" required></textarea>
+            </div>
+
+            <div class="question">
+                <label for="clearWhen">Clear When - อยากให้เป้าหมายนี้สำเร็จเมื่อไหร่</label>
+                <span class="hint">ระบุเดือน ปี หรือจำนวนเดือนที่คุณอยากได้ เช่น อีก 6 เดือน</span>
+                <input type="text" id="clearWhen" required>
+            </div>
+
+            <div class="question">
+                <label for="whatToDo">What Will You Do - จะลงมือทำ และแลกอะไรบ้าง เพื่อให้ได้เป้าหมายนี้</label>
+                <span class="hint">ระบุการกระทำ และตัวเลขออกมาให้ได้มากที่สุด</span>
+                <textarea id="whatToDo" required></textarea>
+            </div>
+
+            <div class="question">
+                <label for="resources">List Resources - ทรัพยากรอะไรบ้าง และจำนวนเท่าไหร่บ้าง ที่คุณต้องใช้</label>
+                <span class="hint">เช่น เงิน คน เวลา</span>
+                <textarea id="resources" required></textarea>
+            </div>
+
+            <div class="button-group">
+                <button type="submit" id="createBtn">Create Vision Board</button>
+                <button type="button" id="clearBtn" class="btn-secondary">Clear Answer Field</button>
+                <button type="button" id="deleteBtn" class="btn-danger">Delete a Box</button>
+                <button type="button" id="printBtn" class="btn-print">Print Vision Board</button>
+            </div>
+        </form>
+
+        <div id="visionBoard">
+            <h2>Your Vision Board</h2>
+            <div id="noGoalsMessage">No goals added yet. Start by creating your first goal!</div>
+            <div class="board-grid"></div>
+        </div>
+    </div>
+
+<script>
+        let visionBoardItems = new Map();
+
+        document.getElementById('questionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const goalType = document.getElementById('goalType');
+            const goals = {
+                goalTitle: goalType.options[goalType.selectedIndex].text,
+                type: goalType.value,
+                whatIsYourGoal: document.getElementById('whatIsYourGoal').value,
+                strongWhy: document.getElementById('strongWhy').value,
+                clearWhen: document.getElementById('clearWhen').value,
+                whatToDo: document.getElementById('whatToDo').value,
+                resources: document.getElementById('resources').value
+            };
+
+            if (visionBoardItems.size >= 6 && !visionBoardItems.has(goalType.value)) {
+                alert('You can only have up to 6 goals in your vision board!');
+                return;
+            }
+
+            visionBoardItems.set(goalType.value, goals);
+            updateVisionBoard();
+            clearForm();
+        });
+
+        document.getElementById('clearBtn').addEventListener('click', clearForm);
+
+        function clearForm() {
+            document.getElementById('questionForm').reset();
+        }
+
+        document.getElementById('deleteBtn').addEventListener('click', function() {
+            const deleteButtons = document.querySelectorAll('.delete-btn');
+            deleteButtons.forEach(btn => {
+                btn.style.display = btn.style.display === 'flex' ? 'none' : 'flex';
+            });
+        });
+
+        document.getElementById('printBtn').addEventListener('click', function() {
+            html2canvas(document.getElementById('visionBoard')).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'my-vision-board.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            });
+        });
+
+        function populateForm(goals) {
+            const goalTypeSelect = document.getElementById('goalType');
+            for(let i = 0; i < goalTypeSelect.options.length; i++) {
+                if(goalTypeSelect.options[i].value === goals.type) {
+                    goalTypeSelect.selectedIndex = i;
+                    break;
+                }
+            }
+            
+            document.getElementById('whatIsYourGoal').value = goals.whatIsYourGoal;
+            document.getElementById('strongWhy').value = goals.strongWhy;
+            document.getElementById('clearWhen').value = goals.clearWhen;
+            document.getElementById('whatToDo').value = goals.whatToDo;
+            document.getElementById('resources').value = goals.resources;
+
+            document.getElementById('questionForm').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function updateVisionBoard() {
+            const boardGrid = document.querySelector('.board-grid');
+            const noGoalsMessage = document.getElementById('noGoalsMessage');
+            boardGrid.innerHTML = '';
+
+            if (visionBoardItems.size === 0) {
+                noGoalsMessage.style.display = 'block';
+                document.getElementById('visionBoard').style.display = 'none';
+                return;
+            }
+
+            noGoalsMessage.style.display = 'none';
+            document.getElementById('visionBoard').style.display = 'block';
+
+            visionBoardItems.forEach((goals, category) => {
+                const item = createVisionBoardItem(goals, category);
+                boardGrid.appendChild(item);
+            });
+        }
+
+        function createVisionBoardItem(goals, category) {
+            const colors = {
+                career: '#FF6B6B',
+                health: '#4ECDC4',
+                personal: '#45B7D1',
+                financial: '#96CEB4',
+                relationship: '#FFEEAD',
+                giving: '#FFB6C1'
+            };
+
+            const item = document.createElement('div');
+            item.className = 'vision-item';
+            item.style.backgroundColor = colors[category] + '20';
+            item.style.borderLeft = `5px solid ${colors[category]}`;
+
+            item.onclick = () => {
+                populateForm(goals);
+            };
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.innerHTML = '×';
+            deleteBtn.onclick = (e) => {
+                e.stopPropagation();
+                visionBoardItems.delete(category);
+                updateVisionBoard();
+            };
+            
+            const title = document.createElement('h3');
+            title.textContent = goals.goalTitle;
+            title.style.color = colors[category];
+            
+            const content = document.createElement('p');
+            content.style.lineHeight = '1.8';
+            content.innerHTML = `ในปี 2025 ฉันจะ${goals.whatIsYourGoal} เพื่อสำเร็จ ${goals.goalTitle} เพราะ ${goals.strongWhy} ภายใน ${goals.clearWhen} ดังนั้นฉันเลยต้องมี ${goals.resources} เพื่อทำให้สิ่งนี้เกิดขึ้น ดังนั้นฉันเลยต้อง ${goals.whatToDo}`;
+
+            item.appendChild(deleteBtn);
+            item.appendChild(title);
+            item.appendChild(content);
+
+            return item;
+        }
+    </script>
+    
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
+</body>
+</html>
